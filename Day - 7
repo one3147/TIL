@@ -1,0 +1,257 @@
+하드디스크의 물리적 구조
+ - 플래터와 헤드로 구성되어 있다
+
+ - 플래터(platter)
+	실제 자료가 저장되는 매체
+	하나의 디스크에는 여러장의 플래터가 들어있고, 하나로 묶여서 한 방향으로 회전
+	플래터가 손상되면 배드 섹터(bad sector)가 발생하거나 플래터 전체를 사용할 수 없음
+
+ - 헤드(head)
+	플래터에 자료를 기록하는 펜
+	플래터의 데이터를 입력/수정/삭제 할 수 있도록 만들어주는 도구
+
+하드디스크의 논리적 구조
+ - 플래터는 트랙과 실린더라는 개념으로 나누고, 트랙과 실린더가 교차되는 영역을 섹터라고 부른다
+
+ - 하나의 하드디스크를 여러개의 논리적인 영역으로 분할한 파티션이라는 단위로 장치를 사용
+    > 경우에 따라 디스크 한 개 전체 용량을 하나의 파티션으로 생성하여 사용하기도 한다
+
+ - 트랙(track)
+	플래터 전체 면적을 동심원을 기준으로 나눴을 때 만들어지는 영역
+
+ - 실린더(cylinder)
+	플래터 전체 면적을 반지름 선을 기준으로 나눴을 때 만들어지는 영역
+
+ - 섹터(sector)
+	트랙과 실린더가 교차되면서 만들어지는 영역
+	실제 자료가 저장되는 단위(1 sector = 512 byte)
+
+ - 파티션(partition)
+	연속된 섹터들의 집합체
+	실제로 사용되는 장치 영역(ex. C드라이브, D드라이브 등이 각각 하나의 파티션)
+
+파티션의 종류
+ - primary partition(주 파티션)
+	일반적으로 사용하는 파티션
+	자료 저장 O, 운영체제 설치 O
+	하나의 디스크에 최대 4개까지 생성 가능
+	(primary와 extended를 합쳐서 4개까지 생성 가능)
+	4개보다 많은 파티션을 사용하기 위해 extended/logical partition 사용
+
+ - extended partition(확장 파티션)
+	파티션의 개수를 4개 넘게 확장하기 위해 사용하는 파티션
+	확장 파티션을 생성한 후 분할하여 논리 파티션을 생성
+	자료 저장 X, 운영체제 설치 X
+	하나의 디스크에 단 1개만 생성 가능
+	(primary와 extended를 합쳐서 4개까지 생성 가능)
+	오로지 logical partition을 생성하기 위해서만 사용
+
+ - logical partition(논리 파티션)
+	확장 파티션을 분할하여 생성
+	BIOS가 읽어내지 못하는 파티션(partition table에 logical 정보 X)
+	자료 저장 O, 운영체제 설치 X
+	생성 개수의 제한이 없다
+	(단, 하나의 디스크에 있는 모든 logical partition의 용량의 합은
+	 extended partition의 용량을 넘길 수 없다)
+
+디스크/파티션 이름 붙는 방식
+ - 디스크를 추가하거나 파티션을 생성하여 운영체제가 그 장치를 인식하면
+   /dev 디렉토리 내부에 장치 이름과 동일한 이름의 장치 파일이 생성된다
+
+ - 디스크
+
+	sd+알파벳
+
+	sd 뒤에 알파벳 한 글자가 붙어서 디스크의 이름이 구성(ex. sda, sdb, sdc 등)
+	알파벳이 붙는 순서는 system이 메인보드의 슬롯 번호를 따라서 활성화 된 슬롯에 순서대로 자동 할당
+
+    * CD-ROM
+	sr0 이라는 이름으로 장치 파일이 존재
+	(cdrom 이라는 이름의 링크 파일이 연결되어 있다)
+
+ - 파티션
+
+	디스크이름+숫자
+
+	디스크 이름 뒤에 숫자가 붙어서 파티션의 이름 구성
+	 > primary, extended	: 1 ~ 4, 사용자가 생성 과정에서 직접 지정
+	   logical		: 5 ~  , 시스템이 순차적으로 지정
+
+fdisk
+ - Linux에 기본적으로 탑재되어 있는 장치 관리 프로그램
+
+ - 사용 방법
+	fdisk 장치명	 : 해당 장치 관리
+	fdisk -l [장치명]	 : 장치 인식 여부 확인
+
+    * 내부 command
+	d	: 파티션 삭제
+	n	: 파티션 생성
+	p	: 파티션 목록 확인
+	q	: 변경 내용을 저장하지 않고 종료
+	w	: 변경 내용을 저장하고 종료
+
+파티션 생성 후 사용을 위해 해야하는 작업
+ 1. 파일시스템 형식 지정
+   - 장치에 자료를 저장하는 형식
+
+   - 운영체제와 버전에 따라 다를 수 있다
+      > 사전에 확인 필요
+
+   - 현재 시스템에서 제공하는 파일시스템 형식은 명령어를 확인
+      > ls -l /usr/sbin/mkfs*
+
+	  * mkfs : make filesystem
+
+   - 파일시스템 형식 지정
+	mkfs -t <FStype> 장치명
+	mkfs.<FStype> 장치명
+
+	  * CentOS 7 버전에서는 xfs를 기본 파일시스템 형식으로 사용
+
+   - 파일시스템 형식 지정은 빠른 포맷과 비슷한 역할 수행
+      > 내부에 있는 자료들의 사용이 불가능할 수 있다
+
+   - 파일시스템 형식은 자료를 저장할 장치에만 지정
+      > primary, logical : 반드시 지정
+	extended	 : 지정 X
+
+ 2. 경로 할당(mount)
+   - 장치에 접근하여 사용할 수 있도록 장치를 디렉토리에 덮어씌우는 작업
+      > 장치 파일을 직접적으로 사용할 수 없기 때문에 장치를 사용하기 위해 반드시 해야하는 작업
+
+   - 마운트 명령
+	마운트		: mount 장치명 마운트포인트
+	마운트 해제	: umount 장치명   or   umount 마운트포인트
+
+	  * 장치명	: 장치의 이름을 절대경로로 작성
+	    마운트포인트	: 디렉토리의 이름을 절대경로로 작성
+
+   - 모든 마운트 된 장치는 시스템이 종료되면서 마운트 해제
+      > 부팅 과정에서 자동으로 마운트 되도록 설정 된 장치들만 마운트(오토 마운트)
+
+   - 마운트 주의사항
+    1) 마운트 포인트 내부에서 마운트/마운트 해제 X
+    2) 장치와 마운트포인트는 항상 1:1로 마운트
+       (하나의 장치를 여러 마운트포인트에 마운트 X
+	여러 장치를 하나의 마운트포인트에 마운트 X)
+
+프로세스
+ - CPU의 리소스(연산 능력)를 사용하는 프로그램
+
+ - 프로세스의 분류
+  1. 종류
+	대화형 프로세스	: 사용자가 입력장치를 통하여 전달한 명령의 결과를 출력장치를 통해 돌려주는 프로세스
+	배치 프로세스	: 정해진 시간에 약속된 동작을 수행하는 프로세스
+	데몬 프로세스	: 서비스의 동작을 제어하는 프로세스
+
+  2. 동작 위치
+	포그라운드 프로세스	: 내가 현재 사용 중인 프로세스
+	백그라운드 프로세스	: 그 외 모든 동작 중인 프로세스
+
+ - 프로세스 확인
+	ps -ef | grep 프로세스명
+
+    * 출력 내용 보는 방법
+	UID	: 해당 프로세스를 동작시킨 사용자
+		  (system이 동작시킨 프로세스도 root로 출력)
+	PID	: Process ID, 프로세스에 붙는 관리(식별) 번호
+		  이미 사용된 번호는 재부팅 전에는 다시 사용 X
+	PPID	: Parents PID, 해당 프로세스의 상위 프로세스 PID
+		  (프로세스도 tree 구조로 구성되어 있다)
+	C	: CPU 점유율, 해당 프로세스가 CPU를 얼마나 사용하는지 출력
+		  0으로 출력되는 내용은 1% 미만을 사용
+	STIME	: Start time, 해당 프로세스가 동작을 시작한 시간
+	TTY	: terminal, 해당 프로세스를 동작시킨 터미널	* terminal : 명령어 전달 창구
+		  (? : system, tty/숫자 : local terminal, pts/숫자 : virtaul terminal)
+	TIME	: 프로세스가 동작하는데 걸린 시간
+	CMD	: 해당 프로세스를 실행 시킨 동작(or 명령어)
+
+ - 프로세스 종료
+	kill <PID>
+
+    * 종료되지 않는 프로세스는 상위 프로세스를 확인하여 종료
+      (상위 프로세스를 종료해도 되는지 반드시 확인)
+
+grub2 boot loader
+ - boot loader : 부팅 과정에서 어느 OS로 부팅할 것인지 선택하여 그 OS로 부팅을 시작시키는 역할
+		  > CentOS 6 버전까지는 grub 사용, 7 버전부터 grub2 사용
+
+ - boot loader 화면에서 특정 방식의 제어를 통하여 root 암호를 모르는 상태로 root 접근 가능
+  1. 부팅 시 kernel 목록이 나오는 화면(5초 유지)에서 아래 방향키를 한 번만 눌러도 자동 진행이 멈춤
+
+  2. 가장 위에 있는 kernel(최신 버전 kernel)을 선택한 상태에서 e 눌러서 편집 화면으로 이동
+
+  3. 편집 화면에서 아래 방향키를 꾹 눌러서 마지막 줄 까지 이동 후 linux16으로 시작하는 줄의 내용 수정
+	* 수정 내용 : ro -> rw, rhgb quiet -> init=/bin/bash, LANG=ko_KR.UTF-8 내용은 삭제
+
+  4. 수정된 내용(일회성)으로 부팅을 하기 위해 ctrl + x 눌러주기
+
+  5. 각종 메세지가 출력되다가 bash-4.2# 이 출력되면 root 사용자로 부팅이 완료된 상태(확인 : whoami)
+	* 이 환경에서 동작이 안되는 명령어들이 있다
+
+  6. 필요한 작업이 다 끝난 후에는 exec /sbin/init 입력하여 정상 부팅
+
+ - grub2 boot loader에서 kernel 편집을 막는 방법(인증 통과 후 편집)
+  1. /etc/grub.d/00_header 파일 마지막 줄 아래로 다음 내용 추가
+
+    <내용>
+	cat << EOF
+	set superusers='인증ID'
+	password 인증ID 인증암호
+	EOF
+
+  2. grub2-mkconfig -o /boot/grub2/grub.cfg	명령 입력하여 적용
+
+run-level
+ - 시스템 부팅 과정에서 동작하는 각종 프로세스들을 단계별로 구분해놓은 개념
+   런레벨에 따라 동작하는 프로세스들이 추가되는 방식으로 구성
+
+ - unix 기반의 운영체제는 부팅 시 어느 run-level 단계로 부팅을 할 것인지 설정
+    > 운영체제에 따라 런레벨이 다를 수 있기 때문에 미리 확인이 필요하다
+
+ - CentOS 7 버전을 기준으로 런레벨 방식이 변경
+    ~ CentOS 6	: 부팅 시 initd 메인 프로세스 동작 -> /etc/inittab 파일 내부 설정에 따라 부팅 시 런레벨 결정
+		  ( /etc/inittab 내부 id:숫자:initdefault: 설정의 숫자에 따라 런레벨 결정)
+
+	runlevel 0 : halt (시스템 종료)
+	runlevel 1 : single user mode (CLI, only root, 최소한의 service 동작, 백업/복구용 사용)
+	runlevel 2 : multi user mode without NFS (CLI, all user, GUI/Network service 제외하고 동작)
+	runlevel 3 : full multi user mode (CLI, all user, GUI service 제외하고 동작)
+	runlevel 4 : unused (사용 X, 4번으로 지정하면 3번으로 부팅)
+	runlevel 5 : X11 (GUI, all user, all service 동작)
+	runlevel 6 : reboot (시스템 재부팅)
+
+    CentOS 7	: 부팅 시 systemd 메인 프로세스 동작 -> default.target 링크 파일에 연결된 런레벨로 부팅
+		  ( /etc/systemd/system 디렉토리 내부 default.target 링크 파일이
+		    /usr/lib/systemd/system 디렉토리 내부 런레벨 타겟에 연결되어 있다)
+
+	poweroff.target	   : runlevel 0
+	rescue.target	   : runlevel 1
+	multi-user.target  : runlevel 3
+	graphical.target   : runlevel 5
+	reboot.target	   : runlevel 6
+
+ - 기본 런레벨 확인
+	systemctl get-default
+	ls -l /etc/systemd/system/default.target
+
+ - 기본 런레벨 변경
+	systemctl set-default <런레벨 타겟>
+	ln -sf /usr/lib/systemd/system/<런레벨 타겟> /etc/systemd/system/default.target
+
+ln
+ - link 생성
+    > 기본적으로 hard link 생성
+      옵션을 사용하여 symbolic link 생성 가능
+
+	* hard link	: 원본 파일과 inode 값이 같은 파일(= 같은 sector에 저장된 데이터로 연결하는 파일)
+	  symbolic link	: 원본 파일로 연결되는 link 파일(= windows의 바로가기 개념)
+
+ - 형식
+	ln [옵션] 원본 링크이름
+
+    * 옵션
+	-s	: hard link가 아닌 symbolic link 생성
+	-f	: 기존 link 파일에 덮어쓰기
+		  (이미 존재하는 이름의 link는 재생성이 불가능 -> 삭제 후에 가능)
