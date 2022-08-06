@@ -1,0 +1,88 @@
+OSI 7 Layer 모델 & TCP/IP 모델
+ - 국제 표준화 기구(ISO)에서 internetworking에 사용하기 위한 목적으로 연구했던 프로토콜의 집합이 OSI 7 Layer
+   연구 과정이 많이 지연되면서 TCP/IP 모델이 인터넷의 표준 프로토콜로 사용
+
+ - OSI 7 Layer 모델은 이론적인 내용을 표현하는 용도(연구용, 개발용, 교육용)
+   TCP/IP 모델은 실제 internet 통신에서 표준 프로토콜로 사용
+
+    * 프로토콜	: 통신에 사용되는 규칙과 약속들의 집합
+
+      표준 프로토콜 : 프로토콜이 다른 장치간의 통신은 불가능
+		   모든 장치가 동일한 프로토콜을 사용할 수 있도록 약속된 프로토콜
+
+OSI 7 Layer
+ - 상위 계층(L5 ~ L7, 프로그램 동작에 관련된 계층)과 하위 계층(L1 ~ L4, 데이터 흐름에 대한 계층)으로 분류
+
+    <하위 계층>
+	L4 : Transport, port 번호를 이용하여 서비스를 식별
+	L3 : Network, Logical address(논리적 주소)를 사용하여 서로 다른 네트워크 사이에서 데이터 전송
+	L2 : Data-link, Physical address(물리적 주소)를 사용하여 동일 네트워크 안에서 데이터 전송
+	L1 : Physical, 통신에 관련된 모든 물리적인 규칙들을 정의 - cable 규격, connector 규격, 전압 등
+			+ 신호 변환 방식(전송하려는 data를 signal로 변환; Line coding)
+
+    * port 번호는 0 ~ 65535 범위의 번호를 사용
+      모든 통신은 상대방의 IP 주소와 함께 port 번호를 사용
+
+      0 ~ 1023 port는 well-known port(잘 알려진 포트)라고 하여
+      자주 사용되는 서비스들이 고정적으로 사용하도록 예약된 범위
+
+      client는 나머지 범위의 port 번호를 매 통신마다 임의로 사용
+
+    * logical address는 Layer 3에서 사용하는 프로토콜에 따라 달라진다
+       > IPv4 : IPv4 address(X.X.X.X)
+	 IPv6 : IPv6 address(X:X:X:X:X:X:X:X)
+
+    * physical address는 Layer 2에서 사용하는 프로토콜에 따라 달라진다
+       > LAN protocol : MAC address(X-X-X-X-X-X)
+
+IP address
+ - 인터넷 표준 프로토콜인 TCP/IP에서 사용되는 logical address(논리적 주소)
+   TCP/IP 표준 프로토콜을 사용하는 모든 장비들은 반드시 IP 주소가 할당되어 있어야 통신이 가능
+
+ - 운영체제(OS)에서 인식한 활성화 된 interface 마다 할당되는 주소
+    > 사람이 직접 입력  or  DHCP 서버를 이용한 자동 할당
+
+ - InterNIC에서 각 국가별로 IP를 분배 -> 국가에서는 ISP(통신 업체)에 IP를 분배
+    -> 사용자들은 ISP에 IP를 신청하여 할당
+
+ - 초창기에는 IPv4를 사용하다가 IP의 개수가 부족해지면서 1996년에 IPv6 제정
+    > 기존에 만들어진 장비들과의 호환성을 위해 IPv4와 IPv6를 혼용해서 사용(현재까지 이어지고 있다)
+
+    * IPv4 : 32bit 길이의 주소, 2^32 = 약 42억 9천만개
+      IPv6 : 128bit 길이의 주소, 2^128 = (2^32)^4개
+
+ - IPv4 구성
+	Network ID + Host ID
+	 > Network ID를 InterNIC/ISP에서 할당, Host ID는 사용자가 범위 안에서 자유롭게 사용
+
+	192.168.10.128		<< Network ID, Host ID 구별? 예전에는 가능했으나 현재는 불가능
+	 > netmask(subnetmask)를 이용하여 Network ID와 Host ID를 구분
+	   Network ID의 bit 수 만큼 1을 나열, Host ID의 bit 수 만큼 0을 나열
+
+	  ex>	IP address : 192.168.10.128, netmask : 255.255.255.0
+
+		IP address : 11000000.10101000.00001010.10000000
+		netmask	   : 11111111.11111111.11111111.00000000
+			    |<------------------------>|<------>|
+				    Network ID		 Host ID
+
+	동일한 Network ID를 사용하는 장치들은 논리적으로 같은 네트워크에 속해 있다
+
+ - IPv4는 기본적으로 두 가지 방식으로 사용; classful, classless
+  1. classful
+      IP 주소의 첫 번째 8bit의 범위에 따라 A ~ E Class를 구분하고 Network ID 범위를 파악
+      (IPv4에서 8bit = 1octet, 1 octet은 0 ~ 255를 2진수로 표현; IPv4는 총 4개 octet 사용)
+
+	Class A			: 첫번째 bit가 0으로 고정된 범위
+	(00000000 ~ 01111111)	  앞의 8bit를 Network ID, 뒤에 24bit를 Host ID로 사용
+	(0 ~ 127)		  Class A의 경우 하나의 network가 2^24 = 16,777,216개의 IP를 포함
+
+	Class B			: 첫번째 ~ 두번째 bit가 10으로 고정된 범위
+	(10000000 ~ 10111111)	  앞의 16bit를 Network ID, 뒤에 16bit를 Host ID로 사용
+	(128 ~ 191)		  Class B의 경우 하나의 network가 2^16 = 65,536개의 IP를 포함
+
+	Class C			: 첫번째 ~ 세번째 bit가 110으로 고정된 범위
+	(11000000 ~ 11011111)	  앞의 24bit를 Network ID, 뒤에 8bit를 Host ID로 사용
+	(192 ~ 223)		  Class C의 경우 하나의 network가 2^8 = 256개의 IP를 포함
+
+    * Class D, Class E는 일반적으로 장치에 할당하여 사용하는 주소가 아니다
