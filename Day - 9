@@ -1,0 +1,199 @@
+  2. classless
+	IP의 낭비가 심한 Classful 방식은 현재 사용 X
+	 > 필요에 따라 class 네트워크를 분할하여 사용하는 classless 방식을 사용
+
+	classful 네트워크를 분할하는 작업을 subnetting 이라고 표현
+	 > 분할된 네트워크는 subnetwork(= subnet)이라고 부르고
+	   netmask는 subnetmask라고 부른다
+
+	classless 방식에서는 subnetmask 표현이 정확해야 한다
+	 > IP 주소의 첫번째 8bit에 따라 Network ID의 bit 개수가 결정 X
+	   subnetmask 정보를 보고 Subnet ID(= Network ID)의 bit의 개수를 파악
+
+	subnetmask 계산 대신에 Subnet ID의 bit 수를 그대로 적어주는 Prefix Length 표현 방식이 존재
+	 ex> 192.168.10.0 네트워크의 subnet ID가 24bit인 경우
+		subnetmask 	: 255.255.255.0	-> 192.168.10.0/255.255.255.0
+		prefix length	: 24		-> 192.168.10.0/24
+
+ - classful 방식과 classless 방식 전부 각 네트워크의 첫번째 IP와 마지막 IP를 장치에 할당 X
+    > 첫번째 IP는 해당 네트워크의 대표 주소(= 이름 = Network ID)로 사용
+      마지막 IP는 해당 네트워크의 방송 주소(= broadcast)로 사용
+
+    * broadcast : 1:n 통신, 방송 주소를 이용한 전체 통신
+		  특정 네트워크 내부 전체 IP를 대상으로 동일한 내용의 데이터를 전달
+
+      unicast	: 1:1 통신, 장치와 장치간의 통신, 일반적으로 사용하는 통신
+
+      multicast	: 1:n 통신, 여러 장치들을 그룹화 시켜서 하나의 Class D IP를 할당
+		  해당 Class D IP에 데이터를 전송하면 그룹화 된 모든 장치를 대상으로 동일한 내용의 데이터 전달
+
+    > VMware에서는 추가로 몇 개의 IP를 다른 용도로 사용하기 때문에 장치에 할당 X
+	1	: host only, NAT에서 Host PC와 가상머신을 연결하는 네트워크 어댑터가 사용
+	2	: NAT에서 사용하는 gateway의 기본값
+
+NAT
+ - Network Address Translation
+    > 네트워크 주소 변환(네트워크 주소 : IP address)
+
+ - IPv4의 문제점 중 하나인 주소 부족현상을 해결하기 위해 90년대 후반에 만들어짐
+
+ - 내부 네트워크와 외부 네트워크를 분리해서 사용
+    > 외부 네트워크(= Internet)를 내부 네트워크(회사망 등)와 분리해서
+      내부 네트워크 장치에 직접적인 접근이 불가능하도록 제어
+
+    > 보안성이 높아진다
+
+ - NAT에서 사용하는 내부 네트워크를 NAT inside, 외부 네트워크를 NAT outside라고 부른다
+    > NAT inside	: trust	   -> 사설(private) 네트워크, 사설 IP 주소 사용
+      NAT outside	: untrust  -> 공인(public) 네트워크, 공인 IP 주소 사용
+
+	* 공인 IP 주소 : 유료, ISP에서 제공, 외부 네트워크와 통신 가능
+	  사설 IP 주소 : 무료, 내 마음대로 사용, 외부 네트워크와 통신 불가능
+	    <사설 IP 범위>
+		Class A : 10.0.0.0/8 (10.0.0.0 ~ 10.255.255.255)
+		Class B : 172.16.0.0/12 (172.16.0.0 ~ 172.31.255.255)
+		Class C : 192.168.0.0/16 (192.168.0.0 ~ 192.168.255.255)
+
+    > NAT가 내부 네트워크와 외부 네트워크를 연결하여 내부 영역에 잇는 장치들이
+      외부 네트워크 상의 장치로 통신을 할 수 있도록 해준다
+
+네트워크 관련 명령어 - ifconfig
+ - Interface configuration; interface의 정보 확인 및 제어
+
+ - CentOS 6 버전까지는 운영체제 설치 시 기본 설치되는 명령어였으나
+   CentOS 7 버전부터는 별도로 설치해야 사용 가능한 명령어
+   (현재는 ip addr 명령어가 기본 탑재, net-tools 패키지 설치 후 부터 ifconfig 사용 가능)
+
+ - 형식
+	ifconfig	: 현재 인식된 모든 interface 정보 확인
+
+	ifconfig <interface 이름>
+			: 특정 interface의 정보만 확인
+
+	ifconfig <interface 이름> { up | down }
+			: 특정 interface의 상태 제어
+
+	ifconfig <interface 이름> <IP address> netmask <subnetmask>
+			: 특정 interface의 현재 IP 주소를 변경
+			  (일시적인 변경, 설정 자체는 변경 X)
+
+네트워크 관련 명령어 - ping
+ - 내 장치와 목적지 장치간의 네트워크 통신 상태 확인
+
+ - Linux에서 ping은 기본적으로 무한정 지속
+    > 옵션을 사용하여 횟수를 제어
+
+ - 형식
+	ping [옵션] [값] ... [옵션] [값] <목적지 주소>
+
+    * 옵션
+	-c	: 횟수 지정
+	-i	: 간격 지정(0.5초 아래로는 관리자만 지정 가능)
+	-s	: 크기 지정
+
+네트워크 관련 명령어 - traceroute
+ - 내 장치와 목적지 장치 사이에 몇 개의 네트워크(= router)가 있는지 확인
+    + 각 router 까지의 속도 확인도 가능
+
+ - 최대 30 hop 까지 확인(hop : 네트워크 개수)
+    > 전 세계 어디에 있어도 20개를 초과하지 않는다
+      (단, 중간에 있는 router가 답이 없거나 정보를 알려주지 않으면 hop 추가)
+
+ - 형식
+	traceroute <목적지 IP>
+
+데몬 프로세스 제어
+ - 데몬 프로세스는 서비스의 동작을 제어하는 프로세스
+    > 데몬 프로세스를 제어하여 서비스를 on/off 하거나 상태 확인 등이 가능하다
+
+ - 형식
+	systemctl <제어 문구> 데몬명
+
+    * 제어 문구 종류
+	start	: 실행
+	stop	: 정지
+	restart	: 재실행(정지 후 실행, 정지 상태에서도 사용 가능)
+	status	: 현재 상태 확인
+	enable	: 부팅 시 자동으로 데몬이 실행되도록 설정
+	disable	: enable 해제
+
+remote access - telnet
+ - 옛날부터 사용되던 원격 접속 protocol
+
+ - CLI 환경으로 사용
+
+ - 거의 모든 OS에서 사용 가능하지만, 보안성이 낮음(비 암호화 통신)
+    > 가급적이면 사용 X
+
+ - 정보
+	패키지	: telnet-*
+	데몬	: telnet.socket
+	방화벽	: port=23/tcp, service=telnet
+	설정파일	: X (별도의 service가 아니기 때문에 설정 파일 X)
+	
+	  * 기본적으로 데몬은 .service 확장자가 자동으로 붙는다(ex. network = network.service)
+	    telnet은 CentOS 7 버전부터 별도의 service로 동작하지 않고 단순 통신 socket으로 취급
+
+firewall(방화벽)
+ - 장치의 네트워크 통신의 보안성을 높이는 요소
+
+ - 방화벽은 장치가 받는 통신은 inbound로, 보내는 통신은 outbound로 분류하여
+   기본적으로 inbound 통신은 모두 차단을 하고 outbound 통신은 모두 허용
+    > 예외 규칙을 작성하여 규칙에 부합하는 통신은 방화벽을 통과할 수 있도록 지정
+
+ - 사용 방법
+  1. 예외 규칙 작성
+	firewall-cmd [--permanent] <add or remove target>
+
+		--permanent	: 모든 interface를 대상으로 방화벽 규칙 적용
+
+		add or remove target은 add는 추가, remove를 제거를 기본으로
+		특정 port나 service를 예외 규칙에 추가하거나 제거
+
+			--add-port=23/tcp	: tcp 23번 port를 예외 규칙에 추가
+			--add-service=telnet	: telnet service를 예외 규칙에 추가
+			--remove-port=23/tcp	: tcp 23번 port를 예외 규칙에서 제거
+			--remove-service=telnet	: telnet service를 예외 규칙에서 제거
+
+  2. 예외 규칙 적용
+	firewall-cmd --reload
+
+  3. 예외 규칙 확인
+	firewall-cmd --list-all
+
+다른 사용자 권한 획득 명령어
+ - sudo
+	특정 명령어를 입력할 때 다른 사용자(보통은 관리자)의 권한을 획득해서 명령을 동작
+	sudo 명령어를 사용하기 위해 일반 사용자 계정의 정보를 수정하고 /etc/sudoers 파일 설정이 필요
+	획득한 권한은 terminal이 종료되면 폐기
+
+ - su
+	현재 접속을 유지한 상태로 다른 사용자(보통은 관리자)로 추가 접속하여 사용
+	su 명령어만 입력하면 환경 변수 등의 개인 환경을 기존에 접속했던 사용자의 개인 환경으로 유지
+	su - 입력하면 개인 환경을 추가 접속하는 사용자의 환경으로 변경
+
+remote access - ssh
+ - secure shell; 보안된 shell
+
+ - 암호화 된 통신을 제공하는 protocol
+
+ - CLI 환경
+
+ - key 교환을 통해 암호화 key를 생성하고, 암호화 key를 이용하여 주고받는 데이터를 암호화/복호화
+
+ - version 1,2가 있으며 현재는 version 2를 사용
+
+ - Linux는 기본적으로 ssh 접속 지원
+
+ - 정보
+	패키지	: openssh-*
+	데몬	: sshd
+	방화벽	: port=22/tcp, service=ssh
+	설정파일	: /etc/ssh/sshd_config
+
+ - 접속 명령
+	ssh <접속할 IP>		 : 상대방 컴퓨터의 내 현재 계정과 동일한 이름의 계정으로 접속
+
+	ssh -l <계정명> <접속할 IP> : 상대방 컴퓨터의 해당 계정으로 접속
+
+	ssh <계정명>@<접속할 IP>	 : 상대방 컴퓨터의 해당 계정으로 접속
