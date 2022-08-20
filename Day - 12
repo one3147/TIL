@@ -1,0 +1,101 @@
+DNS
+ - Domain Name Service  or  Domain Name System
+
+ - Internet에 존재하는 무수히 많은 서버들을 사람이 쉽게 기억하고 접근할 수 있도록
+   문자주소(FQDN)를 이용한 접근을 도와주는 서버
+    > 문자주소(FQDN) <-> IP address 상호 변환
+
+ - FQDN은 일반적으로 말하는 도메인 주소
+    > host name과 domain name으로 구성
+      (ex.  www.google.com 이라는 주소에서 www가 host name, google.com이 domain name)
+
+    > 영문자와 숫자를 이용한 이름으로 자원에 대한 접근이 가능
+
+ - DNS server가 FQDN을 IP address로 변경할 때 Domain Namespace를 바탕으로 하여
+   domain name을 사용하는 nameserver에서 FQDN에 대한 IP address를 받아온다
+    > Domain Namespace에 등록된 서버에서 해당 장치의 IP를 알아온다
+
+ - 정보
+	패키지	: bind-*
+	데몬	: named
+	방화벽	: port=53/tcp, service=dns
+	설정파일	: /etc/named.conf
+
+Domain Namespace
+ - InterNIC에서 관리, tree 구조로 구성되어 있다
+    > 효율적인 관리를 위해 최상위에 root domain을 운용하고 root domain에서 top-level domain으로,
+      top-level domain에서 second-level domain으로 각각 위임 처리를 한다
+
+      second-level domain에서는 목적지 FQDN의 IP를 확인하여 돌려준다
+
+ - 구조 예시
+	.  ───┬ com  ───┬ naver.com     ┌ drive
+	      ├ net     ├ google.com  ──┼ map
+	      └ org     └ nate.com      └ www
+
+	root    top-level  second-level   host
+	domain  domain     domain         name
+
+ - root domain
+    > InterNIC에서 관리하는 Domain Namespace의 최상위 서버
+
+    > 전 세계에 총 13개가 있으며 a ~ m 까지의 이름을 붙여서 식별
+
+ - top-level domain
+    > FQDN의 마지막 단락
+      (ex. com, net, org 등)
+
+    > 해당 이름으로 끝나는 second-level domain들의 주소를 갖고 있다
+      (위임 처리가 되어 있어서 해당 nameserver의 주소를 알려준다)
+
+ - second-level domain
+    > 일반적으로 각 회사에서 운영하는 nameserver
+      (ex.  google.com, nate.com 등)
+
+    > FQDN에서의 host name을 record를 이용하여 특정 IP address에 매핑
+      (host name + domain name이 되면서 해당 IP address를 안내)
+
+DNS server의 역할
+ 1. IP address와 FQDN을 상호 변환
+     * 사용자가 자신의 컴퓨터(DNS client)에 FQDN을 입력하면
+	 1) client는 자신의 cache 확인(hosts 파일 확인 후 DNS cache 확인)
+	 2) IP 설정의 DNS server 주소를 확인하여 해당 장치에 FQDN에 대한 IP address 질의
+	 3) 질의를 받은 DNS server는 자신의 zone 영역을 확인
+	 4) zone 영역에 해당 주소가 없다면 자신의 cache 확인(hosts 파일 확인 후 DNS cache 확인)
+	 5) root hint 내부 내용 중 root domain의 IP address를 확인하여 root domain에 FQDN을 질의
+	 6) root domain은 FQDN 중 top-level domain을 확인하여 해당 nameserver의 주소를 돌려준다
+	 7) DNS server는 top-level domain에 FQDN을 질의
+	 8) top-level domain은 FQDN 중 second-level domain을 확인하여 해당 nameserver의 주소를 돌려준다
+	 9) DNS server는 second-level domain에 FQDN을 질의
+	10) second-level domain은 자신의 record를 확인하여 FQDN 중 host name과
+	    일치하는 이름의 record에 적혀있는 IP address를 DNS server에게 돌려준다
+	11) DNS server는 5 ~ 10번 과정을 거치면서 알게된 주소들을 자신의 cache에 저장
+	12) client에게 FQDN에 대한 IP address를 돌려준다
+	13) client는 자신의 cache에 FQDN에 대한 IP address를 저장 후 해당 주소로 연결
+
+	  ** root hint	: root domain들의 주소를 담고 있는 파일
+			  DNS server 설치 시 함께 설치
+
+ 2. nameserver 구성
+   - DNS server를 설치하면 nameserver를 구성할 수 있는(= zone 영역을 만들 수 있는) 파일이 함께 설치
+      > 파일의 내용을 작성하여 nameserver로 동작이 가능하다
+
+   - root domain, top-level domain, second-level domain은 전부 nameserver
+
+Linux에 기본적으로 존재하는 DNS 관련 파일
+ 1. /etc/hosts
+
+	IP주소	문자주소 [문자주소] ... [문자주소]
+
+	컴퓨터에 해당 문자주소가 입력되면 같은 줄에 저장된 IP 주소로 연결한다
+
+ 2. /etc/resolv.conf
+
+	nameserver <DNS IP>
+
+	컴퓨터가 입력된 FQDN에 대한 IP 주소를 모른다면 이 파일을 보고 DNS server로 찾아간다
+	 > IP 설정 중 DNS 주소가 network 데몬이 실행될 때 마다 이 파일에 다시 저장된다
+
+    * DNS 주소 예시
+	168.126.63.1	: KT DNS
+	8.8.8.8		: google DNS
