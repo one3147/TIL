@@ -1,0 +1,25 @@
+DB server
+ - Database server; 데이터베이스를 모아놓은 서버
+
+ - 스마트폰의 개발 및 보급에 따라 인터넷의 활용이 급속도로 늘어나면서 무수히 많은 데이터 생성
+    > 많은 데이터들을 효율적으로 저장 및 관리하기 위해서 database를 사용
+
+ - CentOS 6버전까지는 mysql이라는 DB server를 기본적으로 제공했으나 mysql이 유료화가 되면서
+   CentOS 7버전부터 mariadb라는 DB server를 기본적으로 제공
+
+ - 정보
+	패키지	: mariadb-*
+	데몬	: mariadb
+	방화벽	: service=mysql
+	설정파일	: /etc/my.cnf - mariadb 데몬 실행에 관련된 설정
+		  (database) mysql - DB server 내부에서 server 전체에 대한 설정
+
+ - 접속 명령어
+	mysql -u <DB 계정> -p [<database 이름>]
+
+ - 용어 정리
+	SQL문	 : DB server에서 사용하는 명령어
+	database : table들의 집합체
+	table	 : 실제 데이터가 저장되는 최소 단위
+	field	 : table 안에 저장되는 데이터들의 종류(분류)
+	column	 : field에 맞춰서 table에 저장되는 데이터
